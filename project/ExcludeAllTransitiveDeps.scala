@@ -3,6 +3,7 @@ import xml._
 import java.io.File
 
 object ExcludeAllTransitiveDeps {
+  val root = "http://central.maven.org/maven2/"
 
   def apply(target: File, module: ModuleID): ModuleID = {
     val name = module.name
@@ -10,7 +11,7 @@ object ExcludeAllTransitiveDeps {
     val version = module.revision
     val pom = target / (name + "-pom.xml")
     if (!pom.exists) {
-      val u = url(s"http://central.maven.org/maven2/$org/$name/$version/$name-$version.pom")
+      val u = url(s"$root/$org/$name/$version/$name-$version.pom")
       IO.download(u, pom)
     }
     
