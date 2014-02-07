@@ -21,12 +21,12 @@ object ExcludeAllTransitiveDeps {
   def makeExclusions(pom: File): Vector[ExclusionRule] = {
     val root = XML.loadFile(pom)
 
-    val dependencies = root \ "project" \ "dependencies" \ "dependency"
-    
-    dependencies.foldLeft(Vector.empty[ExclusionRule]){ case (m, e) =>
+    val dependencies = root \ "dependencies" \ "dependency"    
+    val res = dependencies.foldLeft(Vector.empty[ExclusionRule]){ case (m, e) =>
       val gid = (e \ "groupId").text
       val aid = (e \ "artifactId").text
       m :+ ExclusionRule(gid, aid)
     }
+    res
   }
 }

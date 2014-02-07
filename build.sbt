@@ -8,8 +8,7 @@ net.virtualvoid.sbt.graph.Plugin.graphSettings
 
 lazy val logging = Seq(
   "org.slf4j" % "slf4j-api" % "1.7.5",
-  "org.slf4j" % "jcl-over-slf4j" % "1.7.5",
-  "org.slf4j" % "slf4j-simple" % "1.7.5" % "runtime"
+  "org.slf4j" % "jcl-over-slf4j" % "1.7.5"
 )
 
 lazy val transitive = Seq(
