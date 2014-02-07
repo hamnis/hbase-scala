@@ -3,8 +3,10 @@ package hbase
 import org.apache.hadoop.hbase.client.{HTable, Put, Get, Increment => HIncrement}
 import Bytes._
 
-trait Table {
+trait Table extends java.io.Closeable {
   def underlying: HTable
+
+  def close() = underlying.close()
 
   def name: String = StringBytes.fromBytes(underlying.getTableName)
   
