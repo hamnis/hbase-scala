@@ -1,6 +1,6 @@
 package hbase
 
-import org.apache.hadoop.hbase.client.{HTable, Put, Get, Increment => HIncrement}
+import org.apache.hadoop.hbase.client.{HTable, Put, Get, Scan, Increment => HIncrement}
 import Bytes._
 
 trait Table extends java.io.Closeable {
@@ -35,6 +35,23 @@ trait Table extends java.io.Closeable {
     }
     underlying.increment(query)
     ()
+  }
+
+  def scan[F](family: F)(implicit familyC: Bytes[F]): ResultIterable = {
+    val s = new Scan()
+    s.addFamily(familyC.toBytes(family))
+    scan(s)
+  }
+  
+  def scan[F, C](family: F, column: C)(implicit familyC: Bytes[F], columnC: Bytes[C]): ResultIterable = {
+    val s = new Scan()
+    s.addColumn(familyC.toBytes(family), columnC.toBytes(column))
+    scan(s)
+  }
+
+  private def scan(scan: Scan): ResultIterable = {
+    val scanner = underlying.getScanner(scan)
+    new ResultIterable(scanner)
   }
 
   def flush() = underlying.flushCommits()

@@ -1,7 +1,6 @@
 package hbase
 
-import org.apache.hadoop.hbase.client.{Result => HResult}
-import collection.JavaConverters._
+import org.apache.hadoop.hbase.client.{Result => HResult, ResultScanner}
 
 trait Result {
   def underlying: HResult
@@ -21,4 +20,15 @@ object Result {
   def apply(result: HResult): Result = new Result {
     val underlying = result
   }
+}
+
+class ResultIterable(rs: ResultScanner) extends Iterable[Result] with java.io.Closeable {
+  def iterator = new Iterator[Result]{
+    val underlying = rs.iterator()
+    def hasNext = underlying.hasNext
+    def next = Result(underlying.next())
+  }
+  
+  def close = rs.close()  
+  
 }
