@@ -1,17 +1,21 @@
 package hbase
 
 import org.apache.hadoop.hbase.client.{Result => HResult, ResultScanner}
+import Bytes._
 
 trait Result {
   def underlying: HResult
+
+  def getRow[K](implicit keyC: Bytes[K]) = keyC.fromBytes(underlying.getRow)
   
-  def getValue[F, C, V](family: F, column: C)(implicit familyC: Bytes[F], columnC: Bytes[C], valueC: Bytes[V]): Option[V] = {
+  def getValue[F, C](family: F, column: C)(implicit familyC: Bytes[F], columnC: Bytes[C]): Option[Value] = {
     val res = underlying.getValue(familyC.toBytes(family), columnC.toBytes(column))
-    Option(res).map(valueC.fromBytes(_))
+    Option(res).map(Value(_))
   }
 
-  def getValue[V](implicit valueC: Bytes[V]): Option[V] = 
-    Option(underlying.value()).map(valueC.fromBytes(_))
+  def getValueAs[V](implicit valueC: Bytes[V]): Option[V] = getValue.map(_.as[V])
+
+  def getValue: Option[Value] = Option(underlying.value()).map(Value(_))
 
   override def toString = underlying.toString
 }
