@@ -50,4 +50,16 @@ object Table {
   def apply(table: HTable): Table = new Table {
     val underlying = table
   }
+
+  /**
+  * Execute the block of code in context of the table.
+  * The table will be closed after the block has run.
+  **/
+  def execute[A](table: Table)(block: Table => A): A = {
+    try {
+      block(table)
+    } finally {
+      table.close()
+    }
+  }
 }

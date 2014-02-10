@@ -1,10 +1,9 @@
 package hbase
 
-import org.apache.hadoop.hbase.HBaseConfiguration
-import org.apache.hadoop.hbase.client.{HBaseAdmin,HTable}
+import org.apache.hadoop.hbase.client.{HBaseAdmin}
 
 object Main {
-  implicit val config = HBaseConfiguration.create()
+  implicit val config = Config.create().toConfiguration()
 
   def main(args: Array[String]) {
     args match {
