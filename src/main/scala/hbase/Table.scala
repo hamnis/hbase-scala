@@ -1,5 +1,6 @@
 package hbase
 
+import collection.JavaConverters._
 import org.apache.hadoop.hbase.client.{HTable, Put, Get, Scan, Increment => HIncrement}
 import Bytes._
 
@@ -11,7 +12,10 @@ trait Table extends java.io.Closeable {
   def name: String = StringBytes.fromBytes(underlying.getTableName)
   
   def get[K](key: K)(implicit keyC: Bytes[K]): Option[Result] = 
-    Option(underlying.get(new Get(keyC.toBytes(key)))).map(r => Result(r))
+    Option(underlying.get(new Get(keyC.toBytes(key)))).map(Result)
+
+  def getSeq[K](keys: Seq[K])(implicit keyC: Bytes[K]): IndexedSeq[Result] = 
+    underlying.get(keys.map(key => new Get(keyC.toBytes(key))).asJava).map(Result).toVector
 
   def put[K](key: K, input: QualifiedValue*)(implicit keyC: Bytes[K]): Unit = putSeq(key, input.toList)
 

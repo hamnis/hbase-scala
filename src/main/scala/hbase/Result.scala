@@ -20,7 +20,7 @@ trait Result {
   override def toString = underlying.toString
 }
 
-object Result {
+object Result extends (HResult => Result){
   def apply(result: HResult): Result = new Result {
     val underlying = result
   }
