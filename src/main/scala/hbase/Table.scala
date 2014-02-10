@@ -42,7 +42,7 @@ trait Table extends java.io.Closeable {
     s.addFamily(familyC.toBytes(family))
     scan(s)
   }
-  
+
   def scan[F, C](family: F, column: C)(implicit familyC: Bytes[F], columnC: Bytes[C]): ResultIterable = {
     val s = new Scan()
     s.addColumn(familyC.toBytes(family), columnC.toBytes(column))
@@ -72,11 +72,6 @@ object Table {
   * Execute the block of code in context of the table.
   * The table will be closed after the block has run.
   **/
-  def execute[A](table: Table)(block: Table => A): A = {
-    try {
-      block(table)
-    } finally {
-      table.close()
-    }
-  }
+  def execute[A](table: Table)(block: Table => A): A = borrow(table)(block)
+  
 }

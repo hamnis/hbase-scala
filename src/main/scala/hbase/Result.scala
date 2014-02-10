@@ -22,6 +22,9 @@ object Result {
   }
 }
 
+/**
+* ResultIterables should be closed.
+*/
 class ResultIterable(rs: ResultScanner) extends Iterable[Result] with java.io.Closeable {
   def iterator = new Iterator[Result]{
     val underlying = rs.iterator()
