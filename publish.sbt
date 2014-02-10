@@ -24,3 +24,5 @@ pomExtra <<= (pomExtra, name, description) {(pom, name, desc) => pom ++ xml.Grou
     </developer>
   </developers>
 )}
+
+aetherPublishSettings
