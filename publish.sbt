@@ -2,6 +2,8 @@ publishTo <<= (version) apply {
   (v: String) => if (v.trim().endsWith("SNAPSHOT")) Some(Resolvers.sonatypeNexusSnapshots) else Some(Resolvers.sonatypeNexusStaging)
 }
 
+credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
+
 homepage := Some(new URL("http://github.com/hamnis/hbase-scala"))
 
 startYear := Some(2011)
