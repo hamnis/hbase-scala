@@ -1,5 +1,7 @@
 hbase-scala
 ===========
+[![Build Status](https://travis-ci.org/hamnis/hbase-scala.png?branch=master)](https://travis-ci.org/hamnis/hbase-scala)
+
 
 Simple client wrapper around HTable.
 
