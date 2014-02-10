@@ -1,13 +1,23 @@
 package hbase
 
-case class QualifiedValue private[hbase] (_family: Array[Byte], _column: Array[Byte], _value: Array[Byte])
+case class QualifiedValue private[hbase] (_family: Array[Byte], _column: Array[Byte], _value: Array[Byte]) {
+  override def toString = {
+    import Bytes.{ StringBytes => SB}
+    "family: %s, column: %s, value: %s".format(SB.fromBytes(_family), SB.fromBytes(_column), SB.fromBytes(_value))
+  }
+}
 
 object QualifiedValue {
   def apply[F, C, V](family: F, column: C, value: V)(implicit familyC: Bytes[F], columnC: Bytes[C], valueC: Bytes[V]): QualifiedValue = new QualifiedValue(familyC.toBytes(family), columnC.toBytes(column), valueC.toBytes(value))
   
 }
 
-case class Increment private[hbase] (_family: Array[Byte], _column: Array[Byte], _amount: Long)
+case class Increment private[hbase] (_family: Array[Byte], _column: Array[Byte], _amount: Long) {
+  override def toString = {
+    import Bytes.{ StringBytes => SB}
+    "family: %s, column: %s, amount: %s".format(SB.fromBytes(_family), SB.fromBytes(_column), _amount)
+  }
+}
 
 object Increment {
   def apply[F, C](family: F, column: C)(implicit familyC: Bytes[F], columnC: Bytes[C]): Increment = 

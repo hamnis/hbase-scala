@@ -21,6 +21,8 @@ trait Table extends java.io.Closeable {
       val QualifiedValue(f, c, v) = in
       query.add(f, c, v)
     }
+    underlying.put(query)
+    ()
   }
 
   def inc[K](key: K, input: Increment*)(implicit keyC: Bytes[K]): Unit = incSeq(key, input.toList)
@@ -32,6 +34,7 @@ trait Table extends java.io.Closeable {
       query.addColumn(f, c, i)
     }
     underlying.increment(query)
+    ()
   }
 
   def flush() = underlying.flushCommits()
