@@ -1,6 +1,8 @@
 package hbase
 
-case class QualifiedValue private[hbase] (_family: Array[Byte], _column: Array[Byte], _value: Array[Byte]) {
+sealed trait Input
+
+case class QualifiedValue private[hbase] (_family: Array[Byte], _column: Array[Byte], _value: Array[Byte]) extends Input {
   override def toString = {
     import Bytes.{ StringBytes => SB}
     "family: %s, column: %s, value: %s".format(SB.fromBytes(_family), SB.fromBytes(_column), SB.fromBytes(_value))
@@ -12,7 +14,7 @@ object QualifiedValue {
   
 }
 
-case class Increment private[hbase] (_family: Array[Byte], _column: Array[Byte], _amount: Long) {
+case class Increment private[hbase] (_family: Array[Byte], _column: Array[Byte], _amount: Long) extends Input {
   override def toString = {
     import Bytes.{ StringBytes => SB}
     "family: %s, column: %s, amount: %s".format(SB.fromBytes(_family), SB.fromBytes(_column), _amount)
