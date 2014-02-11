@@ -14,7 +14,7 @@ lazy val logging = Seq(
 lazy val transitive = Seq(
   "com.google.protobuf" % "protobuf-java" % "2.4.0a",
   "commons-lang" % "commons-lang" % "2.6",
-  "commons-configuration" % "commons-configuration" % "1.6" exclude("commons-logging", "commons-logging"),
+  "commons-configuration" % "commons-configuration" % "1.6" exclude("commons-logging", "commons-logging") exclude("commons-digester", "commons-digester") exclude("commons-lang", "commons-lang"),
   "commons-digester" % "commons-digester" % "1.8" exclude("commons-beanutils", "commons-beanutils") exclude("commons-logging", "commons-logging"),
   "commons-beanutils" % "commons-beanutils-core" % "1.8.0" exclude("commons-logging", "commons-logging")
 )
