@@ -2,30 +2,23 @@ package hbase
 
 sealed trait Input
 
-case class QualifiedValue private[hbase] (_family: Array[Byte], _column: Array[Byte], _value: Array[Byte]) extends Input {
+case class Coordinates private[hbase](_family: Array[Byte], _column: Option[Array[Byte]] = None) {
+  def family[F](implicit conv: Bytes[F]) = conv.fromBytes(_family)
+  def column[C](implicit conv: Bytes[C]) = _column.map(conv.fromBytes(_))
+
   override def toString = {
-    import Bytes.{ StringBytes => SB}
-    "family: %s, column: %s, value: %s".format(SB.fromBytes(_family), SB.fromBytes(_column), SB.fromBytes(_value))
+    "family: %s, column: %s".format(family[String], column[String])
   }
 }
 
-object QualifiedValue {
-  def apply[F, C, V](family: F, column: C, value: V)(implicit familyC: Bytes[F], columnC: Bytes[C], valueC: Bytes[V]): QualifiedValue = new QualifiedValue(familyC.toBytes(family), columnC.toBytes(column), valueC.toBytes(value))
-  
-}
-
-case class Increment private[hbase] (_family: Array[Byte], _column: Array[Byte], _amount: Long) extends Input {
+case class QualifiedValue(coords: Coordinates, value: Value) extends Input {
   override def toString = {
-    import Bytes.{ StringBytes => SB}
-    "family: %s, column: %s, amount: %s".format(SB.fromBytes(_family), SB.fromBytes(_column), _amount)
+    "%s, value: %s".format(coords.toString, value.toString)
   }
 }
 
-object Increment {
-  def apply[F, C](family: F, column: C)(implicit familyC: Bytes[F], columnC: Bytes[C]): Increment = 
-    apply(family, column, 1L)
-
-  def apply[F, C](family: F, column: C, amount: Long)(implicit familyC: Bytes[F], columnC: Bytes[C]): Increment = 
-    new Increment(familyC.toBytes(family), columnC.toBytes(column), amount)
-  
+case class Increment(coords: Coordinates, amount: Long) extends Input {
+  override def toString = {
+    "%s, amount: %s".format(coords.toString, amount)
+  }
 }

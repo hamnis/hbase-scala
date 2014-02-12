@@ -8,9 +8,19 @@ trait Bytes[A] {
 object Bytes {
   import org.apache.hadoop.hbase.util.{Bytes => JBytes}
 
+  implicit object ArrayBytes extends Bytes[Array[Byte]] {
+    def toBytes(input: Array[Byte]) = input
+    def fromBytes(input: Array[Byte]) = input
+  }
+
   implicit object StringBytes extends Bytes[String] {
     def toBytes(input: String) = JBytes.toBytes(input)
     def fromBytes(input: Array[Byte]) = JBytes.toString(input)
+  }
+
+  implicit object BooleanBytes extends Bytes[Boolean] {
+    def toBytes(input: Boolean) = JBytes.toBytes(input)
+    def fromBytes(input: Array[Byte]) = JBytes.toBoolean(input)
   }
   
   implicit object IntBytes extends Bytes[Int] {

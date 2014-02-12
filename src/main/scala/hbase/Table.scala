@@ -1,8 +1,10 @@
 package hbase
 
+import util.Try
 import collection.JavaConverters._
 import org.apache.hadoop.hbase.client.{HTable, Put, Get, Scan, Increment => HIncrement}
 import Bytes._
+
 
 trait Table extends java.io.Closeable {
   def underlying: HTable
@@ -10,9 +12,21 @@ trait Table extends java.io.Closeable {
   def close() = underlying.close()
 
   def name: String = StringBytes.fromBytes(underlying.getTableName)
+
+  def exists[K](key: K, coords: Coordinates)(implicit keyC: Bytes[K]): Boolean = {
+    val query = createGet(key, Some(coords))
+    Try{ underlying.exists(query) }.getOrElse(false)
+  }
   
-  def get[K](key: K)(implicit keyC: Bytes[K]): Option[Result] = 
-    Option(underlying.get(new Get(keyC.toBytes(key)))).map(Result)
+  def get[K](key: K)(implicit keyC: Bytes[K]): Option[Result] = {
+    val query = createGet(key, None)
+    Try{ underlying.get(query) }.map(Result).toOption
+  }
+
+  def get[K](key: K, coords: Coordinates)(implicit keyC: Bytes[K]): Option[Result] = {
+    val query = createGet(key, Some(coords))
+    Try{ underlying.get(query) }.map(Result).toOption
+  }
 
   def getSeq[K](keys: Seq[K])(implicit keyC: Bytes[K]): IndexedSeq[Result] = 
     underlying.get(keys.map(key => new Get(keyC.toBytes(key))).asJava).map(Result).toVector
@@ -22,7 +36,7 @@ trait Table extends java.io.Closeable {
   def putSeq[K](key: K, input: Seq[QualifiedValue])(implicit keyC: Bytes[K]): Unit = {
     val query = new Put(keyC.toBytes(key))
     input.foreach{ in =>
-      val QualifiedValue(f, c, v) = in
+      val QualifiedValue(Coordinates(f, Some(c)), Value(v)) = in
       query.add(f, c, v)
     }
     underlying.put(query)
@@ -34,7 +48,7 @@ trait Table extends java.io.Closeable {
   def incSeq[K](key: K, input: Seq[Increment])(implicit keyC: Bytes[K]): Unit = {
     val query = new HIncrement(keyC.toBytes(key))
     input.foreach{ in =>
-      val Increment(f, c, i) = in
+      val Increment(Coordinates(f, Some(c)), i) = in
       query.addColumn(f, c, i)
     }
     underlying.increment(query)
@@ -53,12 +67,27 @@ trait Table extends java.io.Closeable {
     scan(s)
   }
 
+  def flush() = underlying.flushCommits()
+
+  private def createGet[K](key: K, coords: Option[Coordinates])(implicit keyC: Bytes[K]): Get = {
+    val query = new Get(keyC.toBytes(key))
+    coords.foreach { c =>
+      val column = c._column
+      if (column.isDefined) {
+        query.addColumn(c._family, column.get) //yolo
+      }
+      else {
+        query.addFamily(c._family)
+      }      
+    }
+    query
+  }
+
+
   private def scan(scan: Scan): ResultIterable = {
     val scanner = underlying.getScanner(scan)
     new ResultIterable(scanner)
   }
-
-  def flush() = underlying.flushCommits()
 }
 
 object Table {

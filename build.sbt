@@ -13,13 +13,13 @@ lazy val logging = Seq(
 
 lazy val transitive = Seq(
   "com.google.protobuf" % "protobuf-java" % "2.4.0a",
-  "commons-lang" % "commons-lang" % "2.6",
-  "commons-configuration" % "commons-configuration" % "1.6" exclude("commons-logging", "commons-logging") exclude("commons-digester", "commons-digester") exclude("commons-lang", "commons-lang"),
+  "commons-lang" % "commons-lang" % "2.6",  
   "commons-digester" % "commons-digester" % "1.8" exclude("commons-beanutils", "commons-beanutils") exclude("commons-logging", "commons-logging"),
-  "commons-beanutils" % "commons-beanutils-core" % "1.8.0" exclude("commons-logging", "commons-logging")
+  "commons-beanutils" % "commons-beanutils" % "1.7.0" exclude("commons-logging", "commons-logging")
 )
 
 libraryDependencies ++= Seq(
+  ExcludeAllTransitiveDeps(target.value, "commons-configuration" % "commons-configuration" % "1.6"),
   ExcludeAllTransitiveDeps(target.value, "org.apache.hbase" % "hbase" % "0.94.16"),
   ExcludeAllTransitiveDeps(target.value, "org.apache.hadoop" % "hadoop-core" % "1.0.4"),
   ExcludeAllTransitiveDeps(target.value, "org.apache.zookeeper" % "zookeeper" % "3.4.5")
@@ -28,3 +28,5 @@ libraryDependencies ++= Seq(
 libraryDependencies ++= logging
 
 libraryDependencies ++= transitive
+
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test"
