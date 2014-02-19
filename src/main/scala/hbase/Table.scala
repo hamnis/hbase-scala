@@ -2,14 +2,12 @@ package hbase
 
 import util.Try
 import collection.JavaConverters._
-import org.apache.hadoop.hbase.client.{HTable, Put, Get, Scan, Increment => HIncrement}
+import org.apache.hadoop.hbase.client.{HTableInterface, HTable, Put, Get, Scan, Increment => HIncrement}
 import Bytes._
 
 
 trait Table extends java.io.Closeable {
-  def underlying: HTable
-
-  def close() = underlying.close()
+  def underlying: HTableInterface
 
   def name: String = StringBytes.fromBytes(underlying.getTableName)
 
@@ -55,30 +53,26 @@ trait Table extends java.io.Closeable {
     ()
   }
 
-  def scan[F](family: F)(implicit familyC: Bytes[F]): ResultIterable = {
+  def scan(coords: Coordinates): ResultIterable = {
     val s = new Scan()
-    s.addFamily(familyC.toBytes(family))
-    scan(s)
-  }
-
-  def scan[F, C](family: F, column: C)(implicit familyC: Bytes[F], columnC: Bytes[C]): ResultIterable = {
-    val s = new Scan()
-    s.addColumn(familyC.toBytes(family), columnC.toBytes(column))
+    coords._column match {
+      case Some(column) => s.addColumn(coords._family, column)
+      case None => s.addFamily(coords._family)
+    }
     scan(s)
   }
 
   def flush() = underlying.flushCommits()
 
+  def close() = underlying.close()
+
   private def createGet[K](key: K, coords: Option[Coordinates])(implicit keyC: Bytes[K]): Get = {
     val query = new Get(keyC.toBytes(key))
     coords.foreach { c =>
-      val column = c._column
-      if (column.isDefined) {
-        query.addColumn(c._family, column.get) //yolo
-      }
-      else {
-        query.addFamily(c._family)
-      }      
+      c._column match {
+        case Some(column) => query.addColumn(c._family, column)
+        case None => query.addFamily(c._family)
+      }          
     }
     query
   }
@@ -97,7 +91,7 @@ object Table {
     apply(new HTable(config, name))
   }
 
-  def apply(table: HTable): Table = new Table {
+  def apply(table: HTableInterface): Table = new Table {
     val underlying = table
   }
 
