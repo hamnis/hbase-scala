@@ -3,6 +3,7 @@ package hbase
 import util.Try
 import collection.JavaConverters._
 import org.apache.hadoop.hbase.client.{HTableInterface, HTable, Put, Get, Scan, Increment => HIncrement}
+import org.apache.hadoop.hbase.filter.Filter
 import Bytes._
 
 
@@ -53,13 +54,22 @@ trait Table extends java.io.Closeable {
     ()
   }
 
-  def scan(coords: Coordinates): ResultIterable = {
-    val s = new Scan()
-    coords._column match {
-      case Some(column) => s.addColumn(coords._family, column)
-      case None => s.addFamily(coords._family)
+  def scan[A](coords: Coordinates, filter: Option[Filter] = None)(f: ResultIterable => IndexedSeq[A]): IndexedSeq[A] = {
+    val res = scan{ s =>
+      coords._column match {
+        case Some(column) => s.addColumn(coords._family, column)
+        case None => s.addFamily(coords._family)
+      }
+      s.setFilter(filter.orNull)
+      s
     }
-    scan(s)
+    borrow(res)(f)
+  }
+
+  def scan(scan: Scan => Scan): ResultIterable = {
+    val s = scan(new Scan())
+    val scanner = underlying.getScanner(s)
+    new ResultIterable(scanner)
   }
 
   def flush() = underlying.flushCommits()
@@ -78,10 +88,6 @@ trait Table extends java.io.Closeable {
   }
 
 
-  private def scan(scan: Scan): ResultIterable = {
-    val scanner = underlying.getScanner(scan)
-    new ResultIterable(scanner)
-  }
 }
 
 object Table {
