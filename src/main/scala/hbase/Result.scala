@@ -8,11 +8,18 @@ trait Result {
 
   def getRow[K](implicit keyC: Bytes[K]) = keyC.fromBytes(underlying.getRow)
   
+  @deprecated("Use getValue(Coordinates) instead", "0.4.0")
   def getValue[F, C](family: F, column: C)(implicit familyC: Bytes[F], columnC: Bytes[C]): Option[Value] = {
-    val res = underlying.getValue(familyC.toBytes(family), columnC.toBytes(column))
+    getValue(Coordinates(family, column))
+  }
+
+  def getValue(coords: Coordinates): Option[Value] = {
+    val res = underlying.getValue(coords._family, coords._column.orNull)
     Option(res).map(Value(_))
   }
 
+  def getValueAs[V](coords: Coordinates)(implicit valueC: Bytes[V]): Option[V] = getValue(coords).map(_.as[V])
+  
   def getValueAs[V](implicit valueC: Bytes[V]): Option[V] = getValue.map(_.as[V])
 
   def getValue: Option[Value] = Option(underlying.value()).map(Value(_))

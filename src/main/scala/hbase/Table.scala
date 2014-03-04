@@ -106,5 +106,6 @@ object Table {
   * The table will be closed after the block has run.
   **/
   def execute[A](table: Table)(block: Table => A): A = borrow(table)(block)
+  def execute[A](name: String)(block: Table => A)(implicit config: Configuration): A = execute(Table(name))(block)
   
 }

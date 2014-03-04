@@ -14,7 +14,7 @@ object Main {
         }
       }
       case Array("get", tableName, key) => {
-        hbase.borrow(Table(tableName)) { table =>
+        Table.execute(tableName) { table =>
           val result = table.get(key)
           println(result.flatMap(_.getValue.map(_.toString)).getOrElse("Value for %s not found".format(key)))
         }
