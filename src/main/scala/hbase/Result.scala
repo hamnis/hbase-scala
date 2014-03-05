@@ -24,6 +24,10 @@ trait Result {
 
   def getValue: Option[Value] = Option(underlying.value()).map(Value(_))
 
+  def isEmpty = underlying.isEmpty
+
+  def size = underlying.size()
+
   override def toString = underlying.toString
 }
 
