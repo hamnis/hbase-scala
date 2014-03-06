@@ -30,3 +30,7 @@ libraryDependencies ++= logging
 libraryDependencies ++= transitive
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test"
+
+libraryDependencies += "org.mockito" % "mockito-core" % "1.9.5" % "test"
+
+libraryDependencies += "org.codehaus.jackson" % "jackson-mapper-asl" % "1.9.13" % "test"

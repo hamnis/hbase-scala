@@ -15,14 +15,16 @@ trait Result {
 
   def getValue(coords: Coordinates): Option[Value] = {
     val res = underlying.getValue(coords._family, coords._column.orNull)
-    Option(res).map(Value(_))
+    Option(res).filterNot(_.isEmpty).map(Value(_))
   }
 
   def getValueAs[V](coords: Coordinates)(implicit valueC: Bytes[V]): Option[V] = getValue(coords).map(_.as[V])
   
   def getValueAs[V](implicit valueC: Bytes[V]): Option[V] = getValue.map(_.as[V])
 
-  def getValue: Option[Value] = Option(underlying.value()).map(Value(_))
+  def getValue: Option[Value] = {
+    Option(underlying.value()).filterNot(_.isEmpty).map(Value(_))
+  }
 
   def isEmpty = underlying.isEmpty
 

@@ -2,8 +2,10 @@ package hbase
 
 import util.Try
 import collection.JavaConverters._
-import org.apache.hadoop.hbase.client.{HTableInterface, HTable, Put, Get, Scan, Increment => HIncrement}
+import org.apache.hadoop.hbase.client.{HTableInterface, HTable, HBaseAdmin, Put, Get, Scan, Increment => HIncrement}
+import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.filter.Filter
+import org.apache.hadoop.conf.Configuration
 import Bytes._
 
 
@@ -12,6 +14,8 @@ trait Table extends java.io.Closeable {
 
   def name: String = StringBytes.fromBytes(underlying.getTableName)
 
+  def config: Configuration = underlying.getConfiguration()
+
   def exists[K](key: K, coords: Coordinates)(implicit keyC: Bytes[K]): Boolean = {
     val query = createGet(key, Some(coords))
     Try{ underlying.exists(query) }.getOrElse(false)
@@ -19,12 +23,12 @@ trait Table extends java.io.Closeable {
   
   def get[K](key: K)(implicit keyC: Bytes[K]): Option[Result] = {
     val query = createGet(key, None)
-    Try{ underlying.get(query) }.map(Result).toOption
+    Try{ underlying.get(query) }.map(Result).toOption.filterNot(_ == null)
   }
 
   def get[K](key: K, coords: Coordinates)(implicit keyC: Bytes[K]): Option[Result] = {
     val query = createGet(key, Some(coords))
-    Try{ underlying.get(query) }.map(Result).toOption
+    Try{ underlying.get(query) }.map(Result).toOption.filterNot(_ == null)
   }
 
   def getSeq[K](keys: Seq[K])(implicit keyC: Bytes[K]): IndexedSeq[Result] = 
@@ -54,7 +58,7 @@ trait Table extends java.io.Closeable {
     ()
   }
 
-  def scan[A](coords: Coordinates, filter: Option[Filter] = None)(f: ResultIterable => IndexedSeq[A]): IndexedSeq[A] = {
+  def scan[A](coords: Coordinates, filter: Option[Filter] = None)(f: ResultIterable => A): A = {
     val res = scan{ s =>
       coords._column match {
         case Some(column) => s.addColumn(coords._family, column)
@@ -76,7 +80,9 @@ trait Table extends java.io.Closeable {
 
   def close() = underlying.close()
 
-  private def createGet[K](key: K, coords: Option[Coordinates])(implicit keyC: Bytes[K]): Get = {
+  def admin[A](f: TableAdmin => A) = TableAdmin.execute(f)(config)
+
+  private[hbase] def createGet[K](key: K, coords: Option[Coordinates])(implicit keyC: Bytes[K]): Get = {
     val query = new Get(keyC.toBytes(key))
     coords.foreach { c =>
       c._column match {
@@ -86,12 +92,9 @@ trait Table extends java.io.Closeable {
     }
     query
   }
-
-
 }
 
 object Table {
-  import org.apache.hadoop.conf.Configuration
 
   def apply(name: String)(implicit config: Configuration): Table = {
     apply(new HTable(config, name))
@@ -101,11 +104,23 @@ object Table {
     val underlying = table
   }
 
+  def list(implicit config: Configuration): List[String] = TableAdmin.execute(_.list())
+  
+  def create(name: String, columnFamiles: String*)(implicit config: Configuration): Try[Table] = 
+    TableAdmin.execute(_.create(name, columnFamiles : _*)).map(_ => apply(name))
+  
+  def create(descriptor: HTableDescriptor)(implicit config: Configuration): Try[Table] = 
+    TableAdmin.execute(_.create(descriptor)).map(_ => apply(descriptor.getNameAsString))
+
+  def exists(name: String)(implicit config: Configuration):Boolean = 
+    TableAdmin.execute(_.exists(name))
+
   /**
   * Execute the block of code in context of the table.
   * The table will be closed after the block has run.
   **/
   def execute[A](table: Table)(block: Table => A): A = borrow(table)(block)
-  def execute[A](name: String)(block: Table => A)(implicit config: Configuration): A = execute(Table(name))(block)
+  def execute[A](name: String)(block: Table => A)(implicit config: Configuration): A = 
+    execute(Table(name))(block)
   
 }
