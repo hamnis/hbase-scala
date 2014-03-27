@@ -20,7 +20,7 @@ lazy val transitive = Seq(
 
 libraryDependencies ++= Seq(
   ExcludeAllTransitiveDeps(target.value, "commons-configuration" % "commons-configuration" % "1.6"),
-  ExcludeAllTransitiveDeps(target.value, "org.apache.hbase" % "hbase" % "0.94.16"),
+  ExcludeAllTransitiveDeps(target.value, "org.apache.hbase" % "hbase" % "0.94.18"),
   ExcludeAllTransitiveDeps(target.value, "org.apache.hadoop" % "hadoop-core" % "1.0.4"),
   ExcludeAllTransitiveDeps(target.value, "org.apache.zookeeper" % "zookeeper" % "3.4.5")
 )
