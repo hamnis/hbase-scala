@@ -2,7 +2,7 @@ package hbase
 
 import util.Try
 import collection.JavaConverters._
-import org.apache.hadoop.hbase.client.{HTableInterface, HTable, HBaseAdmin, Put, Get, Scan, Increment => HIncrement}
+import org.apache.hadoop.hbase.client.{HTableInterface, HTable, HBaseAdmin, Delete, Put, Get, Scan, Increment => HIncrement}
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.filter.Filter
 import org.apache.hadoop.conf.Configuration
@@ -56,6 +56,25 @@ trait Table extends java.io.Closeable {
     }
     underlying.increment(query)
     ()
+  }
+
+  def delete[K](key: K, coords: Seq[Coordinates] = Nil)(implicit keyC: Bytes[K]): Unit = {
+    deleteWith(key){del =>
+      coords.foreach(c => c match {
+        case Coordinates(family, Some(column)) => del.deleteColumns(family, column)
+        case Coordinates(family, None) => del.deleteFamily(family)
+      })
+      del
+    }
+  }
+
+  def delete[K](key: K)(implicit keyC: Bytes[K]): Unit = {
+    deleteWith(key)(identity)
+  }
+
+  def deleteWith[K](key: K)(f: Delete => Delete)(implicit keyC: Bytes[K]): Unit = {
+    val query = new Delete(keyC.toBytes(key))
+    underlying.delete(f(query))
   }
 
   def scan[A](coords: Coordinates, filter: Option[Filter] = None)(f: ResultIterable => A): A = {
