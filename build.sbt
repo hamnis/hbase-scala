@@ -2,7 +2,9 @@ name := "hbase-scala"
 
 organization := "net.hamnaberg"
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.10.4"
+
+crossScalaVersions := Seq("2.10.4", "2.11.2")
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
 
@@ -29,7 +31,7 @@ libraryDependencies ++= logging
 
 libraryDependencies ++= transitive
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.2" % "test"
 
 libraryDependencies += "org.mockito" % "mockito-core" % "1.9.5" % "test"
 
